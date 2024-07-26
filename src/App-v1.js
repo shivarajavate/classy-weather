@@ -33,15 +33,18 @@ function formatDay(dateStr) {
 }
 
 class App extends React.Component {
-  state = {
-    location: "",
-    isLoading: false,
-    displayLocation: "",
-    weather: {},
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      location: "",
+      isLoading: false,
+      displayLocation: "",
+      weather: {},
+    };
+    this.getWeather = this.getWeather.bind(this);
+  }
 
-  getWeather = async () => {
-    if (this.state.location.length < 2) return this.setState({ weather: {} });
+  async getWeather() {
     try {
       this.setState({ isLoading: true });
       // 1) Getting location (geocoding)
@@ -66,38 +69,26 @@ class App extends React.Component {
       const weatherData = await weatherRes.json();
       this.setState({ weather: weatherData.daily });
     } catch (err) {
-      console.error(err);
+      console.log(err);
     } finally {
       this.setState({ isLoading: false });
     }
-  };
-
-  setLocation = (e) => this.setState({ location: e.target.value });
-
-  // useEffect with [] dependency array
-  componentDidMount() {
-    // this.getWeather();
-    this.setState({ location: localStorage.getItem("location") || "" });
   }
-
-  // useEffect with [this.state.location] dependency array
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.location !== this.state.location) {
-      this.getWeather();
-      localStorage.setItem("location", this.state.location);
-    }
-  }
-
   render() {
     return (
       <div className="app">
         <h1>Classy Weather</h1>
-        <Input
-          location={this.state.location}
-          onChangeLocation={this.setLocation}
-        />
+        <div>
+          <input
+            type="text"
+            placeholder="Enter location..."
+            value={this.state.location}
+            onChange={(e) => this.setState({ location: e.target.value })}
+          />
+        </div>
+        <button onClick={this.getWeather}>Get Weather</button>
         {this.state.isLoading && <p className="loader"> Loading...</p>}
-        {!this.state.isLoading && this.state.weather.weathercode && (
+        {this.state.weather.weathercode && (
           <Weather
             weather={this.state.weather}
             location={this.state.displayLocation}
@@ -109,21 +100,6 @@ class App extends React.Component {
 }
 
 export default App;
-
-class Input extends React.Component {
-  render() {
-    return (
-      <div>
-        <input
-          type="text"
-          placeholder="Enter location..."
-          value={this.props.location}
-          onChange={this.props.onChangeLocation}
-        />
-      </div>
-    );
-  }
-}
 
 class Weather extends React.Component {
   render() {
